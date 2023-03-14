@@ -9,7 +9,6 @@ from typing import List, Optional, NamedTuple, Iterable, Tuple
 from collections import deque
 
 
-VIEWPORT: Rect = (553, 391, 1978, 1132)
 TILESIZE = 57
 
 
@@ -23,6 +22,14 @@ class Vector2(NamedTuple):
 
     def __mul__(self, val: int) -> "Vector2":
         return Vector2(self.x * val, self.y * val)
+
+
+MOVE_DIRS = {
+    e.KEY_UP: Vector2(0, -1),
+    e.KEY_DOWN: Vector2(0, 1),
+    e.KEY_LEFT: Vector2(-1, 0),
+    e.KEY_RIGHT: Vector2(1, 0),
+}
 
 
 class MazeMap:
@@ -46,7 +53,7 @@ class MazeMap:
         try:
             x, y = loc
             return self._grid[y][x] == 0
-        except KeyError:
+        except IndexError:
             return False
 
     def try_move(self, loc: Vector2, vector: Vector2) -> Vector2:
@@ -60,13 +67,6 @@ class MazeMap:
 
 class MazeAI:
 
-    MOVE_DIRS = {
-        e.KEY_UP: Vector2(0, -1),
-        e.KEY_DOWN: Vector2(0, 1),
-        e.KEY_LEFT: Vector2(-1, 0),
-        e.KEY_RIGHT: Vector2(1, 0),
-    }
-
     def __init__(self, keys: KeySender, screen: ScreenGrabber):
         self._keys = keys
         self._screen = screen
@@ -75,9 +75,25 @@ class MazeAI:
         self._loc: Optional[Vector2] = None
 
     def load_map(self):
+        """Load a maze from a screen shot"""
         img = self._screen.grab_gray()
+
+        # Find the map in the screen capture
+        th, tw = img.shape
+        hslice = [i for i in range(tw) if img[th//2, i] == 189]
+        vslice = [i for i in range(th) if img[i, tw//2] == 189]
+        xs, xe = hslice[0], hslice[-1]
+        ys, ye = vslice[0], vslice[-1]
+        dy, dx = ye-ys, xe-xs
+
+        # Adjust capture size to be perfectly divisible by the tilesize
+        img = img[ys:ye+dy%(dy//TILESIZE),xs:xe+dx%(dx//TILESIZE)]
+
+        # Downsize the image to make grid detection easier
         th, tw = [x//TILESIZE for x in img.shape]
         img = cv2.resize(img, (tw, th), 0, 0, interpolation=cv2.INTER_NEAREST_EXACT)
+
+        # Convert to a map
         grid = [[1 if c == 189 else 0 for c in row] for row in img]
         self._maze = MazeMap(grid)
         self._loc = Vector2(1, 1)
@@ -89,12 +105,13 @@ class MazeAI:
         Returns an iterator of tuples. Each tuple contains a valid direction and
         the new location if the given direction is applied
         """
-        for direction, vector in self.MOVE_DIRS.items():
+        for direction, vector in MOVE_DIRS.items():
             new_loc = self._maze.try_move(loc, vector)
             if new_loc:
                 yield direction, new_loc
 
     def find_with_bfs(self):
+        """search for the best path using a breadth-first-search"""
         stack = deque([(self._loc, [])])
         visited = {self._loc}
         while stack:
@@ -108,6 +125,7 @@ class MazeAI:
                     stack.append((next_loc, npath))
 
     def print_info(self, path: List[int] = None):
+        """Show some info about the map and path"""
         print(self._maze)
         if path:
             print(", ".join([{
@@ -119,6 +137,7 @@ class MazeAI:
             print(f"Solved in {len(path)} moves.")
 
     def run(self):
+        """Solve a maze"""
         self.load_map()
         path = self.find_with_bfs()
         self.print_info(path)
@@ -127,7 +146,7 @@ class MazeAI:
 
 def main():
     wait = 3
-    with ScreenGrabber(VIEWPORT) as screen:
+    with ScreenGrabber() as screen:
         with KeySender() as keys:
             ai = MazeAI(keys, screen)
             print(f"You got {wait} second(s) to focus the screen...")

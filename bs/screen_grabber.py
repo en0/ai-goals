@@ -6,9 +6,11 @@ from .typing import Rect
 
 class ScreenGrabber:
 
-    def __init__(self, bbox: Rect):
+    def __init__(self, bbox: Rect = None):
         self._bbox = bbox
         self._sct = mss()
+        if self._bbox is None:
+            self._bbox = self._sct.monitors[0]
 
     def close(self):
         self._sct.close()
