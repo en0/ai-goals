@@ -9,7 +9,7 @@ from typing import List, Optional, NamedTuple, Iterable, Tuple
 from collections import deque
 
 
-TILESIZE = 57
+TILESIZE = 56
 
 
 class Vector2(NamedTuple):
@@ -84,13 +84,21 @@ class MazeAI:
         vslice = [i for i in range(th) if img[i, tw//2] == 189]
         xs, xe = hslice[0], hslice[-1]
         ys, ye = vslice[0], vslice[-1]
-        dy, dx = ye-ys, xe-xs
+        #dy, dx = ye-ys, xe-xs
 
         # Adjust capture size to be perfectly divisible by the tilesize
-        img = img[ys:ye+dy%(dy//TILESIZE),xs:xe+dx%(dx//TILESIZE)]
+        img = img[ys:ye,xs:xe]
+
+        # Aproximate the tilesize
+        state = "initial"
+        for tilesize in range(min(th, tw)):
+            if state == "initial" and img[tilesize//2, tilesize] == 189:
+                state = "identify"
+            elif state == "identify" and img[tilesize//2, tilesize] > 200:
+                break
 
         # Downsize the image to make grid detection easier
-        th, tw = [x//TILESIZE for x in img.shape]
+        th, tw = [x//tilesize for x in img.shape]
         img = cv2.resize(img, (tw, th), 0, 0, interpolation=cv2.INTER_NEAREST_EXACT)
 
         # Convert to a map

@@ -6,7 +6,7 @@ classes.
 ## Solve a maze
 
 1. Open your browser to [mathsisfun](https://www.mathsisfun.com/games/mazes.html)
-2. Start a new `easy` maze.
+2. Start a new maze. only mini, easy, medium are currently working.
 3. Run the maze_game.
 
 ```bash
