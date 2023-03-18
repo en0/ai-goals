@@ -1,0 +1,1 @@
+from .math_is_fun_maze import MathIsFunMazeFactory

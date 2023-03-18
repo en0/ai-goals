@@ -17,9 +17,11 @@ def main() -> int:
         xs, xe = hslice[0], hslice[-1]
         ys, ye = vslice[0], vslice[-1]
 
-        vlines = {}
         img = img[ys:ye,xs:xe]
+        th, tw = [int(x*0.5) for x in img.shape]
+        img = cv2.resize(img, (tw, th))
 
+        vlines = {}
         for x in find_vlines(img):
             img[:,x] = 0
 
@@ -69,7 +71,7 @@ def find_vlines(img):
         cooldown = max(0, cooldown - 1)
         if v > p+20 and cooldown == 0:
             ret.append(x)
-            cooldown = 10
+            cooldown = 3
         p = v
     return ret
 
@@ -109,7 +111,7 @@ def find_hlines(img):
         cooldown = max(0, cooldown - 1)
         if v > p+10 and cooldown == 0:
             ret.append(y)
-            cooldown = 10
+            cooldown = 3
         p = v
     return ret
 

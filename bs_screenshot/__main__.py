@@ -1,22 +1,19 @@
 import cv2
+import numpy as np
 
-from perf import Clock
+from collections import deque
 from bs import ScreenGrabber
 
 
 def main() -> int:
-    mon = (0, 0, 2560, 1600)
-    c = Clock()
 
-    with ScreenGrabber(mon) as g:
+    with ScreenGrabber() as g:
+        img = g.grab_gray()
         while True:
-            img = g.grab()
-            cv2.imshow("ScreenGrabber Benchmark", img)
+            cv2.imshow(f"view", img)
             if cv2.waitKey(25) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
                 break
-            c.tick_and_show()
-
 
 if __name__ == "__main__":
     main()
