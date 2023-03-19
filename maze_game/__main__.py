@@ -3,7 +3,7 @@ from time import sleep
 from typing import List
 
 from .typing import MazeLoader, MoveEnum, Solver, Maze
-from .loaders import ScreenShotMazeLoader
+from .loaders import EdgeDetectingMazeLoader
 from .mazes import MathIsFunMazeFactory
 from .key_sender_adapter import KeySenderAdapter
 from .solvers import DFSSolver
@@ -36,7 +36,7 @@ def main():
             ai = MazeAI(
                 sender=KeySenderAdapter(sender),
                 solver=DFSSolver(),
-                loader=ScreenShotMazeLoader(
+                loader=EdgeDetectingMazeLoader(
                     screen=screen,
                     factory=MathIsFunMazeFactory(),
                 )

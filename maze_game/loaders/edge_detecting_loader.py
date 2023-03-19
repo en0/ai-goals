@@ -1,45 +1,7 @@
-# Detect edges of a maze -> https://www.mathsisfun.com/games/mazes.html
-
 import cv2
 import numpy as np
-
-from collections import deque
-from bs import ScreenGrabber
-
-
-def main() -> int:
-    with ScreenGrabber() as g:
-
-        img = g.grab_gray()
-        th, tw = img.shape
-        hslice = [i for i in range(tw) if img[th//2, i] == 189]
-        vslice = [i for i in range(th) if img[i, tw//2] == 189]
-        xs, xe = hslice[0], hslice[-1]
-        ys, ye = vslice[0], vslice[-1]
-
-        img = img[ys:ye,xs:xe]
-        th, tw = [int(x*0.5) for x in img.shape]
-        img = cv2.resize(img, (tw, th))
-
-        vlines, ts = find_vlines(img)
-        hlines, _ = find_hlines(img)
-
-        vlines.insert(0, 0)
-        hlines.insert(0, 0)
-        ts //= 2
-
-        grid = np.zeros((len(hlines), len(vlines)), dtype="uint8")
-
-        for gy, y in enumerate(hlines):
-            for gx, x in enumerate(vlines):
-                if img[y+ts, x+ts] == 189:
-                    grid[gy, gx] = 1
-
-        while True:
-            cv2.imshow(f"view", grid)
-            if cv2.waitKey(25) & 0xFF == ord("q"):
-                cv2.destroyAllWindows()
-                break
+from bs import ScreenGrabber, Vector2
+from ..typing import MazeLoader, Maze, MazeFactory
 
 
 def fill_in_missing_lines(lines):
@@ -94,15 +56,19 @@ def find_vlines(img):
     ret = []
     p = 0
     cooldown = 0
+    last_tw = 0
     for x, v in enumerate(vlines):
         cooldown = max(0, cooldown - 1)
         if v > p+20 and cooldown == 0:
             ret.append(x)
-            cooldown = 3
+            cooldown = last_tw // 3
+            last_tw = 0
+        else:
+            last_tw += 1
         p = v
 
-    if len(ret) % 2 != 0:
-        ret = ret[:-1]
+    #if len(ret) % 2 != 0:
+        #ret = ret[:-1]
 
     return fill_in_missing_lines(ret)
 
@@ -138,11 +104,15 @@ def find_hlines(img):
     ret = []
     p = 0
     cooldown = 0
+    last_tw = 0
     for y, v in enumerate(lines):
         cooldown = max(0, cooldown - 1)
         if v > p+10 and cooldown == 0:
             ret.append(y)
-            cooldown = 3
+            cooldown = last_tw // 2
+            last_tw = 0
+        else:
+            last_tw += 1
         p = v
 
     if len(ret) % 2 != 0:
@@ -151,5 +121,57 @@ def find_hlines(img):
     return fill_in_missing_lines(ret)
 
 
-if __name__ == "__main__":
-    main()
+class EdgeDetectingMazeLoader(MazeLoader):
+    """Load a maze from a screen shot and use edge-detection to find build the maze"""
+
+    def __init__(self, screen: ScreenGrabber, factory: MazeFactory):
+        self._screen = screen
+        self._factory = factory
+
+    def load(self) -> Maze:
+        img = self._screen.grab_gray()
+
+        # Find the map in the screen capture
+        th, tw = img.shape
+        hslice = [i for i in range(tw) if img[th//2, i] == 189]
+        vslice = [i for i in range(th) if img[i, tw//2] == 189]
+        xs, xe = hslice[0], hslice[-1]
+        ys, ye = vslice[0], vslice[-1]
+        img = img[ys:ye,xs:xe]
+
+        # Make the image smaller to speed things up
+        th, tw = [int(x*0.5) for x in img.shape]
+        img = cv2.resize(img, (tw, th))
+
+        # Find all the vertical and horizontal lines.
+        vlines, ts = find_vlines(img)
+        hlines, _ = find_hlines(img)
+
+        # Push in a leading edge to simply the math.
+        vlines.insert(0, 0)
+        hlines.insert(0, 0)
+
+        # Compute the step-width as half the tile size.
+        ts //= 2
+
+        #for x in vlines:
+        #    img[:, x] = 0
+        #for y in hlines:
+        #    img[y, :] = 0
+
+        #while True:
+        #    cv2.imshow(f"img", img)
+        #    if cv2.waitKey(25) & 0xFF == ord("q"):
+        #        cv2.destroyAllWindows()
+        #        break
+
+        # Fill a grid by checking the center pixel of each tile.
+        grid = np.zeros((len(hlines), len(vlines)), dtype="uint8")
+        for gy, y in enumerate(hlines):
+            for gx, x in enumerate(vlines):
+                if img[y+ts, x+ts] == 189:
+                    grid[gy, gx] = 1
+
+        th, tw = grid.shape
+        return self._factory.create(grid, Vector2(1, 1), Vector2(tw-2, th-2))
+

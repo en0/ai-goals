@@ -3,8 +3,8 @@ from bs import ScreenGrabber, Vector2
 from ..typing import MazeLoader, Maze, MazeFactory
 
 
-class ScreenShotMazeLoader(MazeLoader):
-    """Load a maze from a screen shot"""
+class EstimatedTileSizeMazeLoader(MazeLoader):
+    """Load a maze from a screen shot and estimate the tilesize"""
 
     def __init__(self, screen: ScreenGrabber, factory: MazeFactory):
         self._screen = screen
@@ -19,9 +19,6 @@ class ScreenShotMazeLoader(MazeLoader):
         vslice = [i for i in range(th) if img[i, tw//2] == 189]
         xs, xe = hslice[0], hslice[-1]
         ys, ye = vslice[0], vslice[-1]
-        dy, dx = ye-ys, xe-xs
-
-        # Adjust capture size to be perfectly divisible by the tilesize
         img = img[ys:ye,xs:xe]
 
         # Aproximate the tilesize

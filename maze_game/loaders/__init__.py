@@ -1,1 +1,2 @@
-from .screen_shot_loader import ScreenShotMazeLoader
+from .estimated_tilesize_loader import EstimatedTileSizeMazeLoader
+from .edge_detecting_loader import EdgeDetectingMazeLoader
