@@ -6,7 +6,7 @@ from .typing import MazeLoader, MoveEnum, Solver, Maze
 from .loaders import EdgeDetectingMazeLoader
 from .mazes import MathIsFunMazeFactory
 from .key_sender_adapter import KeySenderAdapter
-from .solvers import DFSSolver
+from .solvers import DFSSolver, GeneticSolver, SupervisedLearningSolver
 
 
 class MazeAI:
@@ -31,11 +31,16 @@ class MazeAI:
 
 def main():
     wait = 1
+    solvers = [
+        DFSSolver(),
+        GeneticSolver(),
+        SupervisedLearningSolver()
+    ]
     with ScreenGrabber() as screen:
         with KeySender() as sender:
             ai = MazeAI(
                 sender=KeySenderAdapter(sender),
-                solver=DFSSolver(),
+                solver=solvers[2],
                 loader=EdgeDetectingMazeLoader(
                     screen=screen,
                     factory=MathIsFunMazeFactory(),

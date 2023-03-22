@@ -29,6 +29,16 @@ class Maze(ABC):
 
     @property
     @abstractmethod
+    def height(self):
+        ...
+
+    @property
+    @abstractmethod
+    def width(self):
+        ...
+
+    @property
+    @abstractmethod
     def start(self):
         ...
 

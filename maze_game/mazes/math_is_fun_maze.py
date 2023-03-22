@@ -47,7 +47,6 @@ class MathIsFunMaze(Maze):
 
     def try_move(self, loc: Vector2, move: MoveEnum) -> Vector2:
         vector = MOVE_TO_VECTOR[move]
-        print(move, vector)
         if self._is_walkable(loc + vector) and self._is_walkable(loc + vector * 2):
             return loc + vector * 2
 
@@ -58,6 +57,14 @@ class MathIsFunMaze(Maze):
     @property
     def target(self):
         return self._target
+
+    @property
+    def height(self):
+        return len(self._grid)
+
+    @property
+    def width(self):
+        return len(self._grid[0])
 
 
 class MathIsFunMazeFactory(MazeFactory):
