@@ -75,7 +75,7 @@ note: bs stands for baby-steps.
 - `bs_sendkey` is a test ground for doing keystroke stuff.
 - `bs_mouse` is a test ground for doing mouse stuff.
 - `bs_edge_detection` is a test ground for some edge detection stuff.
+- `bs_linear_regression` is a test ground for learning pytorch neural networks.
 - `bs` is a set of classes i created from the *bs* test grounds.
-- `linear_regression` is a hello-world of NN.
 - `maze_game` is the maze bot.
 
